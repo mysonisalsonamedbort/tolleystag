@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Matt's Stag Do 🎮</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#090910;color:#fff}
+input,select,textarea{background:#12121f;border:2px solid #333;color:#fff;padding:7px 10px;font-family:'VT323',monospace;font-size:17px;border-radius:6px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:#cc0000}
+.vt{font-family:'VT323',monospace}
+.card{background:#12121f;border:2px solid #252535;border-radius:10px;padding:13px}
+.btn{font-family:'Press Start 2P',monospace;border:none;cursor:pointer;border-radius:6px;padding:8px 12px;font-size:6px;transition:transform .08s;display:inline-block}
+.btn:active{transform:translateY(2px)}
+.br{background:#cc0000;color:#fff;box-shadow:0 3px 0 #880000}
+.by{background:#e6a817;color:#1a1400;box-shadow:0 3px 0 #9e6d00}
+.bg_{background:#2e7d32;color:#fff;box-shadow:0 3px 0 #1b5e20}
+.bp{background:#6a1b9a;color:#fff;box-shadow:0 3px 0 #38006b}
+.bk{background:#2a2a3a;color:#aaa;box-shadow:0 3px 0 #111}
+label{font-family:'Press Start 2P',monospace;font-size:6px;color:#666;display:block;margin-bottom:4px;margin-top:8px}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#cc0000;border-radius:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+// ═══════════════════════════════════════════════════
+//  STEP 1 — REPLACE THESE 4 VALUES WITH YOUR FIREBASE
+//  CONFIG (see setup guide in the README)
+// ═══════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:      "REPLACE_WITH_YOUR_API_KEY",
+  authDomain:  "REPLACE_WITH_YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://REPLACE_WITH_YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId:   "REPLACE_WITH_YOUR_PROJECT_ID",
+};
+// ═══════════════════════════════════════════════════
+
+const { useState, useEffect } = React;
+
+let db;
+try {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  db = firebase.database();
+} catch(e) {}
+
+const sv = (k, v) => { try { db.ref("stag/" + k).set(v); } catch(e) {} };
+
+const PL = [
+  {name:"Pikachu",   emoji:"⚡",color:"#FFD700",bg:"#1a1400",cn:"Yellow"},
+  {name:"Charizard", emoji:"🔥",color:"#FF7043",bg:"#1a0800",cn:"Orange"},
+  {name:"Mewtwo",    emoji:"🔮",color:"#CE93D8",bg:"#120020",cn:"Lilac"},
+  {name:"Snorlax",   emoji:"💤",color:"#90CAF9",bg:"#001220",cn:"Sky blue"},
+  {name:"Gengar",    emoji:"👻",color:"#AB47BC",bg:"#120020",cn:"Dark purple"},
+  {name:"Squirtle",  emoji:"💧",color:"#42A5F5",bg:"#001220",cn:"Blue"},
+  {name:"Bulbasaur", emoji:"🌿",color:"#66BB6A",bg:"#001208",cn:"Green"},
+  {name:"Jigglypuff",emoji:"🎤",color:"#F48FB1",bg:"#200010",cn:"Pink"},
+  {name:"Psyduck",   emoji:"🦆",color:"#FFA726",bg:"#1a0e00",cn:"Gold"},
+  {name:"Meowth",    emoji:"🪙",color:"#FFEB3B",bg:"#1a1400",cn:"Cream"},
+  {name:"Magikarp",  emoji:"🐟",color:"#EF5350",bg:"#1a0000",cn:"Red"},
+  {name:"Eevee",     emoji:"🦊",color:"#D4AC6E",bg:"#140900",cn:"Tan"},
+  {name:"Gyarados",  emoji:"🐉",color:"#2196F3",bg:"#000d1a",cn:"Dark blue"},
+  {name:"Geodude",   emoji:"🪨",color:"#B0BEC5",bg:"#111",   cn:"Grey"},
+  {name:"Raichu",    emoji:"🌙",color:"#FF8F00",bg:"#1a0800",cn:"Amber"},
+  {name:"Vulpix",    emoji:"🔴",color:"#FF6B6B",bg:"#1a0000",cn:"Coral"},
+];
+
+const BDGS = [
+  {name:"Boulder Badge",emoji:"🪨",color:"#A1887F"},
+  {name:"Cascade Badge",emoji:"💧",color:"#4FC3F7"},
+  {name:"Thunder Badge",emoji:"⚡",color:"#FFD740"},
+  {name:"Rainbow Badge",emoji:"🌈",color:"#F48FB1"},
+];
+
+const DC={stag:"Matt Tolley",fiance:"Laura Pompili",dates:"19–21 June"};
+const DF={
+  briefText:"Everyone wears a bald cap at least on the journey to Liverpool in tribute to Matt Tolley's magnificent dome. Natural baldness will not be tolerated. Matt does NOT know this is happening.",
+  meetTime:"11:00 – 11:30am",meetPlace:"The Royal George, Euston",
+  trainDep:"~12:15pm from Euston",
+  lateNote:"Arrive after 12:00 → small punishment. Arrive after 12:30 → you're covering the whole stag 😂",
+  hotel:"ibis Styles Liverpool Centre Dale Street – Cavern Quarter",
+  activity:"Golf Fang",activityAddr:"Cains Brewery, Stanhope St, Liverpool L8 5XJ",
+  activityNote:"18-hole crazy golf · AR darts · karaoke rooms · food & cocktails. Open 2pm–midnight on Fridays. Book ahead for groups.",
+  trainBack:"11:45pm from Liverpool Lime Street",trainArrive:"~2:00am at London Euston",
+  liveLocation:"Get Matt to share his live location on the group WhatsApp on Friday evening — frame it as keeping tabs for Saturday morning.",
+  karaokeRules:"• Name That Tune: organiser plays 5 seconds of a song — first to name artist AND title wins a drink token\n• Decades challenge: each person picks a song from their assigned decade\n• Guilty pleasure round: everyone reveals their most embarrassing karaoke song\n• Best song of the night voted by the group — winner gets a free round\n• Group songs need a majority show of hands before they happen",
+  customNotes:"",
+};
+const DPB=[
+  {id:0,name:"The Philharmonic Dining Rooms",address:"36 Hope St L1 9BX"},
+  {id:1,name:"The Shipping Forecast",        address:"15 Slater St L1 4BS"},
+  {id:2,name:"Heebie Jeebies",               address:"80–82 Seel St L1 4BH"},
+  {id:3,name:"BrewDog Liverpool",            address:"30 Colquitt St L1 4DE"},
+  {id:4,name:"The Baltic Fleet",             address:"33 Wapping L1 8DQ"},
+  {id:5,name:"Dockleaf",                     address:"Greenland St L1 0BS"},
+  {id:6,name:"81 Renshaw",                   address:"81 Renshaw St L1 2SP"},
+  {id:7,name:"The Cavern Club",              address:"10 Mathew St L2 6RE"},
+];
+const DG={phase:"gyms",gymIdx:0,badges:[],usedQIds:[],usedEliteIds:[],shotLog:[],mattShots:0,round:null};
+
+function App(){
+  const[org,setOrg]=useState(false);
+  const[tab,setTab]=useState("friday");
+  const[ready,setReady]=useState(false);
+  const[cfg,setCfg]=useState(DC);
+  const[fri,setFri]=useState(DF);
+  const[pubs,setPubs]=useState(DPB);
+  const[qs,setQs]=useState([]);
+  const[eq,setEq]=useState([]);
+  const[claims,setClaims]=useState([]);
+  const[game,setGame]=useState(DG);
+
+  useEffect(()=>{
+    if(!db){setReady(true);return;}
+    let loaded={cfg:false,fri:false,pubs:false,qs:false,eq:false,claims:false,game:false};
+    const refs=[];
+    const chk=()=>{if(Object.values(loaded).every(Boolean))setReady(true);};
+    const listen=(key,setter,fallback)=>{
+      const r=db.ref("stag/"+key);
+      r.on('value',s=>{
+        const v=s.val();
+        setter(v!==null&&v!==undefined?v:fallback);
+        if(!loaded[key]){loaded[key]=true;chk();}
+      },()=>{if(!loaded[key]){loaded[key]=true;chk();}});
+      refs.push(r);
+    };
+    listen("cfg",setCfg,DC);listen("fri",setFri,DF);listen("pubs",setPubs,DPB);
+    listen("qs",setQs,[]);listen("eq",setEq,[]);listen("claims",setClaims,[]);listen("game",setGame,DG);
+    return()=>refs.forEach(r=>r.off());
+  },[]);
+
+  const mk=k=>v=>sv(k,v);
+  const sC=mk("cfg"),sF=mk("fri"),sP=mk("pubs"),sQ=mk("qs"),sE=mk("eq"),sCl=mk("claims"),sG=mk("game");
+
+  if(!ready)return(
+    <div style={{background:"#090910",minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:14}}>
+      <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:8,color:"#cc0000"}}>LOADING…</div>
+      <div className="vt" style={{fontSize:16,color:"#333"}}>Connecting…</div>
+    </div>
+  );
+
+  const TABS=[
+    {id:"friday",l:"🎤 Night 1"},{id:"pokemon",l:"⚡ Pokémon"},{id:"route",l:"🗺️ Route"},
+    {id:"questions",l:"❓ Questions"},{id:"game",l:"🎮 Game"},{id:"print",l:"🖨️ Print"},
+  ];
+
+  return(
+    <div style={{fontFamily:"'Press Start 2P',monospace",background:"#090910",minHeight:"100vh",color:"#fff"}}>
+      <div style={{background:"#cc0000",padding:"12px 14px",borderBottom:"4px solid #880000"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+          <span style={{fontSize:22}}>⚪</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:5.5,letterSpacing:2,color:"#ffcb05"}}>POKÉMON STAG COMMAND</div>
+            <div className="vt" style={{fontSize:17,color:"#fff",marginTop:3}}>{cfg.stag} · Liverpool · {cfg.dates}</div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div className="vt" style={{fontSize:14,color:"#ffcb05",marginBottom:5}}>🏅 {(game.badges||[]).length}/4</div>
+            <button className="btn" onClick={()=>setOrg(o=>!o)} style={{fontSize:5.5,background:org?"#ffcb05":"#2a2a3a",color:org?"#1a1400":"#888",boxShadow:org?"0 3px 0 #9e6d00":"0 3px 0 #111"}}>
+              {org?"🔧 ORGANISER":"👤 GROUP VIEW"}
+            </button>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"flex",overflowX:"auto",background:"#0e0e1c",borderBottom:"2px solid #252535"}}>
+        {TABS.map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{background:tab===t.id?"#12121f":"transparent",color:tab===t.id?"#ffcb05":"#555",border:"none",borderBottom:tab===t.id?"3px solid #cc0000":"3px solid transparent",padding:"10px 11px",cursor:"pointer",fontFamily:"'Press Start 2P',monospace",fontSize:5.5,whiteSpace:"nowrap"}}>
+            {t.l}
+          </button>
+        ))}
+      </div>
+      <div style={{padding:14,maxWidth:860,margin:"0 auto"}}>
+        {tab==="friday"    && <FridayTab    fri={fri}    sF={sF}  cfg={cfg} org={org}/>}
+        {tab==="pokemon"   && <PokemonTab   claims={claims} sCl={sCl} org={org}/>}
+        {tab==="route"     && <RouteTab     pubs={pubs}  sP={sP}  org={org}/>}
+        {tab==="questions" && <QTab         qs={qs}      sQ={sQ}  eq={eq}   sE={sE} cfg={cfg} claims={claims} org={org}/>}
+        {tab==="game"      && <GameTab      game={game}  sG={sG}  qs={qs}   eq={eq} pubs={pubs} cfg={cfg} claims={claims}/>}
+        {tab==="print"     && <PrintTab     cfg={cfg}    sC={sC}  claims={claims} pubs={pubs} game={game} org={org}/>}
+      </div>
+    </div>
+  );
+}
+
+/* ── FRIDAY ── */
+function FridayTab({fri,sF,cfg,org}){
+  const s=k=>v=>sF({...fri,[k]:v});
+  const RO=({val,style={}})=><div className="vt" style={{fontSize:18,color:"#eee",lineHeight:1.5,...style}}>{val||<span style={{color:"#333"}}>TBC</span>}</div>;
+  const Row=({icon,label,children})=>(
+    <div className="card" style={{marginBottom:8,display:"flex",gap:12,alignItems:"flex-start"}}>
+      <div style={{fontSize:20,minWidth:28,textAlign:"center",paddingTop:2}}>{icon}</div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:5.5,color:"#555",marginBottom:5,fontFamily:"'Press Start 2P',monospace"}}>{label}</div>
+        {children}
+      </div>
+    </div>
+  );
+  return(
+    <div>
+      <div style={{fontSize:9,color:"#ffcb05",marginBottom:3}}>Night 1 — Becoming Matt Tolley</div>
+      <div className="vt" style={{fontSize:15,color:"#666",marginBottom:14}}>An homage.</div>
+      <div className="card" style={{marginBottom:10,borderLeft:"4px solid #e6a817",borderRadius:"0 10px 10px 0"}}>
+        <div style={{fontSize:6,color:"#e6a817",marginBottom:7,fontFamily:"'Press Start 2P',monospace"}}>THE BRIEF</div>
+        {org?<textarea value={fri.briefText} onChange={e=>s("briefText")(e.target.value)} rows={4}/>:<RO val={fri.briefText}/>}
+      </div>
+      <div style={{fontSize:6,color:"#cc0000",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>FRIDAY 20 JUNE</div>
+      <Row icon="🚉" label="MEET UP">
+        {org?<div className="g2"><div><label>TIME</label><input value={fri.meetTime} onChange={e=>s("meetTime")(e.target.value)}/></div><div><label>PLACE</label><input value={fri.meetPlace} onChange={e=>s("meetPlace")(e.target.value)}/></div></div>:<RO val={fri.meetTime+" at "+fri.meetPlace}/>}
+      </Row>
+      <Row icon="⏰" label="PUNCTUALITY">
+        {org?<textarea value={fri.lateNote} onChange={e=>s("lateNote")(e.target.value)} rows={2}/>:<RO val={fri.lateNote} style={{color:"#ff9999"}}/>}
+      </Row>
+      <Row icon="🚂" label="TRAIN TO LIVERPOOL">
+        {org?<input value={fri.trainDep} onChange={e=>s("trainDep")(e.target.value)}/>:<RO val={"Departing "+fri.trainDep}/>}
+      </Row>
+      <Row icon="🏨" label="HOTEL">
+        {org?<input value={fri.hotel} onChange={e=>s("hotel")(e.target.value)}/>:<RO val={fri.hotel}/>}
+      </Row>
+      <div className="card" style={{marginBottom:8,borderLeft:"4px solid #2e7d32",borderRadius:"0 10px 10px 0"}}>
+        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+          <div style={{fontSize:20,minWidth:28,textAlign:"center",paddingTop:2}}>⛳</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:5.5,color:"#2e7d32",marginBottom:5,fontFamily:"'Press Start 2P',monospace"}}>FRIDAY ACTIVITY</div>
+            {org?(
+              <><label>VENUE</label><input value={fri.activity} onChange={e=>s("activity")(e.target.value)} style={{marginBottom:5}}/><label>ADDRESS</label><input value={fri.activityAddr} onChange={e=>s("activityAddr")(e.target.value)} style={{marginBottom:5}}/><label>NOTES</label><textarea value={fri.activityNote} onChange={e=>s("activityNote")(e.target.value)} rows={2}/></>
+            ):(
+              <><div className="vt" style={{fontSize:19,marginBottom:2}}>{fri.activity}</div><div className="vt" style={{fontSize:14,color:"#888"}}>📍 {fri.activityAddr}</div><div className="vt" style={{fontSize:14,color:"#555",marginTop:3}}>{fri.activityNote}</div></>
+            )}
+          </div>
+        </div>
+      </div>
+      <Row icon="🏠" label="TRAIN HOME">
+        {org?<div className="g2"><div><label>DEPARTURE</label><input value={fri.trainBack} onChange={e=>s("trainBack")(e.target.value)}/></div><div><label>ARRIVAL</label><input value={fri.trainArrive} onChange={e=>s("trainArrive")(e.target.value)}/></div></div>:<RO val={fri.trainBack+" · arriving "+fri.trainArrive}/>}
+      </Row>
+      <div className="card" style={{marginBottom:8,background:"#001a0d",borderColor:"#2e7d3244"}}>
+        <div style={{fontSize:5.5,color:"#2e7d32",marginBottom:6,fontFamily:"'Press Start 2P',monospace"}}>📍 LIVE LOCATION</div>
+        {org?<textarea value={fri.liveLocation} onChange={e=>s("liveLocation")(e.target.value)} rows={2}/>:<RO val={fri.liveLocation}/>}
+      </div>
+      <div className="card" style={{marginBottom:8}}>
+        <div style={{fontSize:5.5,color:"#F48FB1",marginBottom:6,fontFamily:"'Press Start 2P',monospace"}}>🎤 KARAOKE RULES</div>
+        {org?<textarea value={fri.karaokeRules} onChange={e=>s("karaokeRules")(e.target.value)} rows={6}/>:<pre className="vt" style={{fontSize:16,whiteSpace:"pre-wrap",lineHeight:1.7,color:"#eee"}}>{fri.karaokeRules}</pre>}
+      </div>
+      {(org||fri.customNotes)&&(
+        <div className="card">
+          <div style={{fontSize:5.5,color:"#555",marginBottom:6,fontFamily:"'Press Start 2P',monospace"}}>ADDITIONAL NOTES</div>
+          {org?<textarea value={fri.customNotes} onChange={e=>s("customNotes")(e.target.value)} rows={3} placeholder="Anything else the group needs to know…"/>:<RO val={fri.customNotes}/>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── POKÉMON ── */
+function PokemonTab({claims,sCl,org}){
+  const[nm,setNm]=useState("");
+  const[pk,setPk]=useState(PL[0].name);
+  const claimed=(claims||[]).map(c=>c.pokemon);
+  const avail=PL.filter(p=>!claimed.includes(p.name));
+  const prev=PL.find(x=>x.name===pk);
+  const claim=()=>{
+    if(!nm.trim()){alert("Enter your name first!");return;}
+    if((claims||[]).find(c=>c.name.toLowerCase()===nm.toLowerCase())){alert("That name is already taken!");return;}
+    if(!avail.find(p=>p.name===pk)){alert("That Pokémon is already claimed!");return;}
+    sCl([...(claims||[]),{name:nm.trim(),pokemon:pk,color:prev.color,cn:prev.cn,emoji:prev.emoji}]);
+    setNm("");
+    const next=avail.filter(p=>p.name!==pk)[0];
+    if(next)setPk(next.name);
+  };
+  return(
+    <div>
+      <div style={{fontSize:9,color:"#ffcb05",marginBottom:4}}>⚡ Pokémon</div>
+      <div className="vt" style={{fontSize:15,color:"#666",marginBottom:14}}>Pick yours. Colour-match your outfit on Saturday. You'll get a temporary tattoo on the night.</div>
+      {avail.length>0?(
+        <div className="card" style={{marginBottom:12}}>
+          <div style={{fontSize:6,color:"#cc0000",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>CLAIM YOURS</div>
+          <label>YOUR NAME</label>
+          <input value={nm} onChange={e=>setNm(e.target.value)} placeholder="Enter your name…" style={{marginBottom:6}}/>
+          <label>YOUR POKÉMON</label>
+          <select value={pk} onChange={e=>setPk(e.target.value)} style={{marginBottom:10}}>
+            {avail.map(p=><option key={p.name} value={p.name}>{p.emoji} {p.name} — wear {p.cn}</option>)}
+          </select>
+          {prev&&(
+            <div style={{padding:"10px 12px",background:prev.bg||"#12121f",border:`2px solid ${prev.color}55`,borderRadius:8,marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:26}}>{prev.emoji}</span>
+              <div>
+                <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:7,color:prev.color}}>{prev.name}</div>
+                <div className="vt" style={{fontSize:16,color:"#aaa"}}>Wear something {prev.cn.toLowerCase()} on Saturday</div>
+              </div>
+            </div>
+          )}
+          <button className="btn bg_" onClick={claim}>⚡ Claim</button>
+        </div>
+      ):(
+        <div className="card" style={{marginBottom:12,textAlign:"center"}}><div className="vt" style={{fontSize:17,color:"#ffcb05"}}>All Pokémon claimed!</div></div>
+      )}
+      <div style={{fontSize:6,color:"#ffcb05",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>{(claims||[]).length}/{PL.length} CLAIMED</div>
+      <div className="g2">
+        {PL.map(p=>{
+          const c=(claims||[]).find(cl=>cl.pokemon===p.name);
+          return(
+            <div key={p.name} className="card" style={{borderLeft:`4px solid ${c?p.color:"#252535"}`,borderRadius:"0 10px 10px 0",opacity:c?1:.4,background:c?(p.bg||"#12121f"):"#0d0d14"}}>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <span style={{fontSize:20}}>{p.emoji}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontFamily:"'Press Start 2P',monospace",fontSize:5,color:p.color,marginBottom:2}}>{p.name}</div>
+                  <div className="vt" style={{fontSize:14,color:c?"#eee":"#333"}}>{c?c.name:"unclaimed"}</div>
+                  <div className="vt" style={{fontSize:12,color:"#444"}}>wear {p.cn}</div>
+                </div>
+                {c&&org&&<button className="btn bk" style={{padding:"3px 7px",fontSize:9}} onClick={()=>sCl((claims||[]).filter(x=>x.name!==c.name))}>✕</button>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── ROUTE ── */
+function RouteTab({pubs,sP,org}){
+  const upd=(id,f,v)=>sP((pubs||[]).map(p=>p.id===id?{...p,[f]:v}:p));
+  return(
+    <div>
+      <div style={{fontSize:9,color:"#ffcb05",marginBottom:4}}>🗺️ Saturday Route</div>
+      <div className="vt" style={{fontSize:15,color:"#666",marginBottom:14}}>Earn 4 badges from 8 pubs to unlock the Elite Four at The Cavern.</div>
+      <div style={{display:"grid",gap:8}}>
+        {(pubs||[]).map((pub,i)=>{
+          const bd=BDGS[i]||{name:`Badge ${i+1}`,emoji:"🏅",color:"#666"};
+          return(
+            <div key={pub.id} className="card" style={{borderLeft:`5px solid ${bd.color}`}}>
+              <div style={{display:"flex",gap:10,alignItems:"flex-start"}}>
+                <div style={{textAlign:"center",minWidth:40}}>
+                  <div style={{fontSize:20}}>{bd.emoji}</div>
+                  <div style={{fontSize:4.5,color:bd.color,marginTop:3,lineHeight:1.4,fontFamily:"'Press Start 2P',monospace"}}>{bd.name}</div>
+                </div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:5.5,color:"#cc0000",marginBottom:4,fontFamily:"'Press Start 2P',monospace"}}>PUB #{i+1}</div>
+                  {org?(
+                    <><label>PUB NAME</label><input value={pub.name} onChange={e=>upd(pub.id,"name",e.target.value)} style={{marginBottom:5}}/><label>ADDRESS</label><input value={pub.address} onChange={e=>upd(pub.id,"address",e.target.value)}/></>
+                  ):(
+                    <><div className="vt" style={{fontSize:19,marginBottom:2}}>{pub.name}</div><div className="vt" style={{fontSize:14,color:"#888"}}>📍 {pub.address}</div></>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{padding:14,background:"#120020",border:"3px solid #9C27B0",borderRadius:10}}>
+          <div style={{display:"flex",gap:12,alignItems:"center"}}>
+            <span style={{fontSize:28}}>⭐</span>
+            <div>
+              <div style={{fontSize:5.5,color:"#9C27B0",marginBottom:4,fontFamily:"'Press Start 2P',monospace"}}>ELITE FOUR FINALE</div>
+              <div className="vt" style={{fontSize:18,color:"#CE93D8"}}>The Cavern Club</div>
+              <div className="vt" style={{fontSize:13,color:"#555",marginTop:3}}>Matt answers questions about Laura. On his own.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── QUESTIONS ── */
+function QTab({qs,sQ,eq,sE,cfg,claims,org}){
+  const[sub,setSub]=useState("friends");
+  const[qf,setQf]=useState({by:"",about:"",q:"",a:""});
+  const[ef,setEf]=useState({q:"",a:""});
+  const[msg,setMsg]=useState("");const[ml,setMl]=useState(false);
+  const named=(claims||[]).map(c=>c.name);
+  const addQ=()=>{if(!qf.q||!qf.a||!qf.about){alert("Fill in all fields!");return;}sQ([...(qs||[]),{id:Date.now(),...qf}]);setQf({by:"",about:"",q:"",a:""});};
+  const addE=()=>{if(!ef.q||!ef.a){alert("Fill in both fields!");return;}sE([...(eq||[]),{id:Date.now(),...ef}]);setEf({q:"",a:""});};
+  const genMsg=async()=>{
+    setMl(true);
+    try{
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:280,messages:[{role:"user",content:`Short funny WhatsApp message for ${cfg.stag}'s stag group. Ask each person to secretly send the organiser: a friend's name from the group, a personal or embarrassing question about them, and the correct answer. Pokémon stag theme. Under 70 words. End: "DM me → [Who] | [Question] | [Answer]"`}]})});
+      const d=await r.json();setMsg(d.content[0].text);
+    }catch{setMsg("Error generating — check your connection.");}
+    setMl(false);
+  };
+  return(
+    <div>
+      <div style={{fontSize:9,color:"#ffcb05",marginBottom:12}}>❓ Questions</div>
+      {named.length>0&&(
+        <div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:12}}>
+          {named.map(n=>{const ct=(qs||[]).filter(q=>q.about===n).length;return(
+            <span key={n} className="vt" style={{fontSize:14,padding:"3px 10px",borderRadius:20,background:ct>0?"#1a2d1a":"#1a1a1a",border:`2px solid ${ct>0?"#2e7d32":"#252535"}`,color:ct>0?"#66BB6A":"#555"}}>{n} ({ct})</span>
+          );})}
+        </div>
+      )}
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        <button className={`btn ${sub==="friends"?"br":"bk"}`} onClick={()=>setSub("friends")}>👥 Friends</button>
+        <button className={`btn ${sub==="elite4"?"bp":"bk"}`} onClick={()=>setSub("elite4")}>⭐ Elite Four</button>
+      </div>
+      {sub==="friends"&&<>
+        {org&&<div className="card" style={{marginBottom:12}}>
+          <div style={{fontSize:6,color:"#cc0000",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>ADD QUESTION</div>
+          <div className="g2" style={{marginBottom:6}}>
+            <div><label>SUBMITTED BY</label><input value={qf.by} onChange={e=>setQf(f=>({...f,by:e.target.value}))} placeholder="Which friend?"/></div>
+            <div><label>ABOUT WHO?</label><select value={qf.about} onChange={e=>setQf(f=>({...f,about:e.target.value}))}><option value="">— pick friend —</option>{named.map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+          </div>
+          <label>THE QUESTION</label><textarea value={qf.q} onChange={e=>setQf(f=>({...f,q:e.target.value}))} rows={2} style={{marginBottom:6}}/>
+          <label>THE ANSWER</label><input value={qf.a} onChange={e=>setQf(f=>({...f,a:e.target.value}))} style={{marginBottom:12}}/>
+          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+            <button className="btn bg_" onClick={addQ}>＋ Add</button>
+            <button className="btn by" onClick={genMsg} disabled={ml}>{ml?"⏳":"📲 WhatsApp message"}</button>
+          </div>
+        </div>}
+        {msg&&<div className="card" style={{marginBottom:12,borderColor:"#e6a817"}}>
+          <div style={{fontSize:5.5,color:"#e6a817",marginBottom:7,fontFamily:"'Press Start 2P',monospace"}}>COPY & SEND TO GROUP</div>
+          <div className="vt" style={{fontSize:16,whiteSpace:"pre-wrap",lineHeight:1.6}}>{msg}</div>
+          <div style={{display:"flex",gap:8,marginTop:8}}>
+            <button className="btn by" onClick={()=>navigator.clipboard?.writeText(msg)}>📋 Copy</button>
+            <button className="btn bk" onClick={()=>setMsg("")}>✕</button>
+          </div>
+        </div>}
+        <div style={{display:"grid",gap:8}}>
+          {(qs||[]).length===0&&<div className="vt" style={{fontSize:15,color:"#333",padding:"12px 0"}}>{org?"No questions yet. Add above or use the WhatsApp message.":"Questions will appear here once loaded."}</div>}
+          {(qs||[]).map(q=>(
+            <div key={q.id} className="card" style={{display:"flex",gap:10}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:5,color:"#444",marginBottom:4,fontFamily:"'Press Start 2P',monospace"}}>{q.by&&`By: ${q.by} · `}About: <span style={{color:"#ffcb05"}}>{q.about}</span></div>
+                <div className="vt" style={{fontSize:17,marginBottom:org?3:0}}>Q: {q.q}</div>
+                {org&&<div className="vt" style={{fontSize:15,color:"#66BB6A"}}>A: {q.a}</div>}
+              </div>
+              {org&&<button className="btn bk" style={{padding:"5px 7px",fontSize:9,alignSelf:"flex-start"}} onClick={()=>sQ((qs||[]).filter(x=>x.id!==q.id))}>✕</button>}
+            </div>
+          ))}
+        </div>
+      </>}
+      {sub==="elite4"&&<>
+        <div style={{padding:"12px 14px",background:"#120020",border:"2px solid #9C27B0",borderRadius:8,marginBottom:12}}>
+          <div className="vt" style={{fontSize:16,color:"#CE93D8",lineHeight:1.6}}>⭐ Questions about {cfg.fiance}. Matt answers them alone at The Cavern Club. Get the answers from {cfg.fiance} before the weekend — keep them secret.</div>
+        </div>
+        {org&&<div className="card" style={{marginBottom:12,borderColor:"#6a1b9a"}}>
+          <label>QUESTION</label><textarea value={ef.q} onChange={e=>setEf(f=>({...f,q:e.target.value}))} rows={2} placeholder={`About ${cfg.fiance} and Matt…`} style={{marginBottom:6}}/>
+          <label>ANSWER (from {cfg.fiance})</label><input value={ef.a} onChange={e=>setEf(f=>({...f,a:e.target.value}))} style={{marginBottom:12}}/>
+          <button className="btn bp" onClick={addE}>＋ Add</button>
+        </div>}
+        <div style={{display:"grid",gap:8}}>
+          {(eq||[]).length===0&&<div className="vt" style={{fontSize:15,color:"#333"}}>No Elite Four questions yet.</div>}
+          {(eq||[]).map((q,i)=>(
+            <div key={q.id} className="card" style={{borderColor:"#6a1b9a",display:"flex",gap:10}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:5,color:"#9C27B0",marginBottom:4,fontFamily:"'Press Start 2P',monospace"}}>ELITE FOUR — Q{i+1}</div>
+                <div className="vt" style={{fontSize:17,marginBottom:org?3:0}}>Q: {q.q}</div>
+                {org&&<div className="vt" style={{fontSize:14,color:"#CE93D8"}}>A: {q.a}</div>}
+              </div>
+              {org&&<button className="btn bk" style={{padding:"5px 7px",fontSize:9,alignSelf:"flex-start"}} onClick={()=>sE((eq||[]).filter(x=>x.id!==q.id))}>✕</button>}
+            </div>
+          ))}
+        </div>
+      </>}
+    </div>
+  );
+}
+
+/* ── GAME ── */
+function GameTab({game,sG,qs,eq,pubs,cfg,claims}){
+  const[step,setStep]=useState("pick");
+  const[sf,setSf]=useState(null);
+  const[st,setSt]=useState(null);
+  const[es,setEs]=useState(null);
+  const[er,setEr]=useState(false);
+  const cl=claims||[];const pubArr=pubs||[];const qArr=qs||[];const eqArr=eq||[];
+  const gBdg=game.badges||[];const gUsed=game.usedQIds||[];const gUsedE=game.usedEliteIds||[];
+  const curPub=pubArr[Math.min(game.gymIdx,pubArr.length-1)];
+  const curQ=game.round?qArr.find(q=>q.id===game.round.qId):null;
+  const remainE=eqArr.filter(q=>!gUsedE.includes(q.id));
+  const eqObj=es!=null?eqArr.find(q=>q.id===es):null;
+  const reset=()=>{setStep("pick");setSf(null);setSt(null);};
+
+  const startRound=(fi,tgt)=>{
+    const pool=qArr.filter(q=>!gUsed.includes(q.id)&&q.about===tgt);
+    if(!pool.length){alert(`No unused questions about ${tgt}! Add more in the Questions tab.`);return;}
+    const q=pool[Math.floor(Math.random()*pool.length)];
+    sG({...game,round:{fi,tgt,qId:q.id,revealed:false}});
+  };
+
+  const markResult=(correct)=>{
+    const r=game.round;if(!r)return;
+    const f=cl[r.fi];const ts=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    const shots=[...(game.shotLog||[])];let matt=game.mattShots||0;
+    if(!correct){shots.push({name:f?.name||"?",reason:`Wrong at ${curPub?.name}`,ts});shots.push({name:"Matt",reason:`His Pokémon (${f?.name}) lost`,ts});matt++;}
+    const nb=correct?[...gBdg,game.gymIdx]:gBdg;
+    const ni=game.gymIdx+1;
+    const np=(nb.length>=4||ni>=pubArr.length)?"elite4":"gyms";
+    sG({...game,badges:nb,shotLog:shots,mattShots:matt,usedQIds:[...gUsed,r.qId],gymIdx:ni,phase:np,round:null});
+    reset();
+  };
+
+  const advElite=(id,correct)=>{
+    const ts=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    const shots=[...(game.shotLog||[])];let matt=game.mattShots||0;
+    if(!correct){shots.push({name:"Matt",reason:"Wrong Elite Four answer",ts});matt++;}
+    const used=[...gUsedE,id];
+    sG({...game,usedEliteIds:used,shotLog:shots,mattShots:matt,phase:eqArr.filter(q=>!used.includes(q.id)).length===0?"champion":"elite4"});
+    setEs(null);
+  };
+
+  if(game.phase==="champion")return(
+    <div style={{textAlign:"center",padding:"36px 14px"}}>
+      <div style={{fontSize:52,marginBottom:10}}>🏆</div>
+      <div style={{fontSize:9,color:"#ffcb05",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>CHAMPION!</div>
+      <div className="vt" style={{fontSize:17,lineHeight:1.7,marginBottom:14}}>{cfg.stag} has conquered the gyms, defeated the Elite Four, and proved his love for {cfg.fiance}.</div>
+      <div style={{display:"flex",gap:6,justifyContent:"center",flexWrap:"wrap",marginBottom:12}}>
+        {BDGS.map((bd,i)=><span key={i} style={{padding:"4px 10px",borderRadius:20,fontSize:6,background:bd.color+"33",border:`2px solid ${bd.color}`,color:bd.color,fontFamily:"'Press Start 2P',monospace"}}>{bd.emoji} {bd.name}</span>)}
+      </div>
+      <div className="vt" style={{fontSize:15,color:"#ff9999",marginBottom:14}}>Matt's forfeits: {game.mattShots||0}</div>
+      <button className="btn bk" onClick={()=>{sG({phase:"gyms",gymIdx:0,badges:[],usedQIds:[],usedEliteIds:[],shotLog:[],mattShots:0,round:null});reset();}}>↺ Reset game</button>
+    </div>
+  );
+
+  if(game.phase==="elite4")return(
+    <div>
+      <div style={{textAlign:"center",padding:"14px 12px",background:"#120020",border:"3px solid #9C27B0",borderRadius:12,marginBottom:12}}>
+        <div style={{fontSize:32,marginBottom:5}}>⭐</div>
+        <div style={{fontSize:7,color:"#CE93D8",marginBottom:3,fontFamily:"'Press Start 2P',monospace"}}>THE ELITE FOUR</div>
+        <div className="vt" style={{fontSize:16,color:"#888"}}>Questions about {cfg.fiance} · {remainE.length} remaining</div>
+        <div className="vt" style={{fontSize:13,color:"#ff9999",marginTop:3}}>Matt's forfeits: {game.mattShots||0}</div>
+        <div style={{display:"flex",gap:5,justifyContent:"center",marginTop:8}}>
+          {BDGS.map((bd,i)=><span key={i} style={{fontSize:18}} title={bd.name}>{bd.emoji}</span>)}
+        </div>
+      </div>
+      {!es?(
+        <div style={{display:"grid",gap:8}}>
+          {remainE.length===0&&<div className="vt" style={{fontSize:15,color:"#333",padding:"10px 0"}}>No Elite Four questions loaded — add them in the Questions tab.</div>}
+          {remainE.map((q,i)=>(
+            <button key={q.id} onClick={()=>{setEs(q.id);setEr(false);}} style={{background:"#1a0033",border:"2px solid #6a1b9a",borderRadius:8,padding:"13px",cursor:"pointer",textAlign:"left",fontFamily:"'VT323',monospace",fontSize:16,color:"#CE93D8"}}>
+              ⭐ Question {gUsedE.length+i+1} — tap to begin
+            </button>
+          ))}
+        </div>
+      ):eqObj?(
+        <div className="card" style={{borderColor:"#9C27B0",borderWidth:2}}>
+          <div style={{fontSize:5.5,color:"#9C27B0",marginBottom:7,fontFamily:"'Press Start 2P',monospace"}}>{cfg.stag} answers alone — no help from his Pokémon</div>
+          <div className="vt" style={{fontSize:18,lineHeight:1.5,marginBottom:10}}>Q: {eqObj.q}</div>
+          {!er?<button className="btn by" onClick={()=>setEr(true)}>🃏 Reveal answer</button>:(
+            <>
+              <div style={{padding:10,background:"#001a0d",border:"2px solid #4CAF50",borderRadius:8,marginBottom:10}}>
+                <div className="vt" style={{fontSize:17,color:"#66BB6A"}}>A: {eqObj.a}</div>
+              </div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button className="btn bg_" onClick={()=>advElite(eqObj.id,true)}>✓ Correct!</button>
+                <button className="btn br" onClick={()=>advElite(eqObj.id,false)}>✗ Wrong — forfeit</button>
+              </div>
+            </>
+          )}
+        </div>
+      ):null}
+      <ShotLog shotLog={game.shotLog} matt={game.mattShots||0}/>
+    </div>
+  );
+
+  return(
+    <div>
+      <div style={{textAlign:"center",padding:"12px",background:"#12121f",border:"2px solid #252535",borderRadius:12,marginBottom:12}}>
+        <div style={{display:"flex",justifyContent:"center",gap:6,marginBottom:7}}>
+          {BDGS.map((bd,i)=>{const ok=i<gBdg.length;return<span key={i} style={{fontSize:19,opacity:ok?1:.15,filter:ok?"none":"grayscale(1)"}} title={bd.name}>{bd.emoji}</span>;})}
+        </div>
+        <div style={{fontSize:6,color:"#ffcb05",marginBottom:4,fontFamily:"'Press Start 2P',monospace"}}>{gBdg.length}/4 BADGES · PUB {Math.min(game.gymIdx+1,pubArr.length)} OF {pubArr.length}</div>
+        {curPub&&<><div className="vt" style={{fontSize:19}}>{curPub.name}</div><div className="vt" style={{fontSize:13,color:"#888"}}>📍 {curPub.address}</div></>}
+      </div>
+      {game.round&&curQ?(
+        <div className="card" style={{borderColor:"#cc0000",borderWidth:2,marginBottom:12}}>
+          {(()=>{const f=cl[game.round.fi];return<div style={{fontSize:5.5,color:"#cc0000",marginBottom:5,fontFamily:"'Press Start 2P',monospace"}}>{f?.emoji} {f?.name} ({f?.pokemon}) is battling for Matt</div>;})()}
+          <div style={{fontSize:5.5,color:"#888",marginBottom:7,fontFamily:"'Press Start 2P',monospace"}}>ABOUT: <span style={{color:"#ffcb05"}}>{game.round.tgt}</span></div>
+          <div className="vt" style={{fontSize:18,lineHeight:1.5,marginBottom:10}}>Q: {curQ.q}</div>
+          {!game.round.revealed?<button className="btn by" onClick={()=>sG({...game,round:{...game.round,revealed:true}})}>🃏 Reveal answer</button>:(
+            <>
+              <div style={{padding:10,background:"#001a0d",border:"2px solid #4CAF50",borderRadius:8,marginBottom:10}}>
+                <div className="vt" style={{fontSize:17,color:"#66BB6A"}}>A: {curQ.a}</div>
+              </div>
+              <div className="vt" style={{fontSize:14,color:"#aaa",marginBottom:8}}>Did {cl[game.round.fi]?.name} get it?</div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button className="btn bg_" onClick={()=>markResult(true)}>✓ Correct — badge!</button>
+                <button className="btn br" onClick={()=>markResult(false)}>✗ Wrong — forfeit</button>
+              </div>
+            </>
+          )}
+        </div>
+      ):(
+        <div>
+          <div style={{fontSize:6,color:"#ffcb05",marginBottom:10,fontFamily:"'Press Start 2P',monospace"}}>
+            {step==="pick"?"MATT PICKS A FRIEND":step==="target"?"PICK A TARGET":"READY?"}
+          </div>
+          {step==="pick"&&(
+            <div className="g3">
+              {cl.map((c,i)=>(
+                <button key={i} onClick={()=>{setSf(i);setStep("target");}} style={{background:"#0d0d14",border:`2px solid ${c.color}44`,borderRadius:10,padding:"9px 4px",cursor:"pointer",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                  <span style={{fontSize:22}}>{c.emoji}</span>
+                  <span style={{fontFamily:"'Press Start 2P',monospace",fontSize:4,color:c.color}}>{c.pokemon}</span>
+                  <span className="vt" style={{fontSize:13,color:"#eee"}}>{c.name}</span>
+                </button>
+              ))}
+              {cl.length===0&&<div className="vt" style={{fontSize:14,color:"#333",gridColumn:"1/-1",padding:"10px 0"}}>No Pokémon claimed yet — friends need to visit the Pokémon tab first.</div>}
+            </div>
+          )}
+          {step==="target"&&(
+            <>
+              <div className="vt" style={{fontSize:14,color:"#888",marginBottom:8}}>{cl[sf]?.emoji} {cl[sf]?.name} answers a question about…</div>
+              <div className="g3" style={{marginBottom:10}}>
+                {cl.filter((_,i)=>i!==sf).map((c,i)=>{
+                  const n=qArr.filter(q=>!gUsed.includes(q.id)&&q.about===c.name).length;
+                  return(
+                    <button key={i} disabled={n===0} onClick={()=>{setSt(c.name);setStep("ready");}} style={{background:"#0d0d14",border:`2px solid ${n>0?"#333":"#1a1a1a"}`,borderRadius:10,padding:"9px 4px",cursor:n>0?"pointer":"not-allowed",opacity:n>0?1:.3,textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:3}}>
+                      <span style={{fontSize:20}}>{c.emoji}</span>
+                      <span className="vt" style={{fontSize:13,color:"#eee"}}>{c.name}</span>
+                      <span style={{fontSize:4.5,color:"#444",fontFamily:"'Press Start 2P',monospace"}}>{n} Q left</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <button className="btn bk" onClick={()=>{setStep("pick");setSf(null);}}>← Back</button>
+            </>
+          )}
+          {step==="ready"&&(
+            <div className="card" style={{borderColor:"#cc0000"}}>
+              <div className="vt" style={{fontSize:16,marginBottom:12,lineHeight:1.6}}>{cl[sf]?.emoji} <b>{cl[sf]?.name}</b> answers a question about <b style={{color:"#ffcb05"}}>{st}</b></div>
+              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                <button className="btn br" onClick={()=>{startRound(sf,st);reset();}}>⚡ Start</button>
+                <button className="btn bk" onClick={()=>setStep("target")}>← Back</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      <ShotLog shotLog={game.shotLog} matt={game.mattShots||0}/>
+    </div>
+  );
+}
+
+function ShotLog({shotLog,matt}){
+  if(!shotLog||!shotLog.length)return null;
+  return(
+    <div className="card" style={{marginTop:12,borderColor:"#cc000033"}}>
+      <div style={{fontSize:5.5,color:"#cc0000",marginBottom:6,fontFamily:"'Press Start 2P',monospace"}}>FORFEIT LOG</div>
+      {shotLog.map((s,i)=><div key={i} className="vt" style={{fontSize:13,color:"#444",borderBottom:"1px solid #1a1a2e",padding:"3px 0"}}>{s.name} — {s.reason} <span style={{color:"#2a2a3a"}}>({s.ts})</span></div>)}
+      <div className="vt" style={{fontSize:14,color:"#ff9999",marginTop:7}}>Matt: {matt} forfeit{matt!==1?"s":""}</div>
+    </div>
+  );
+}
+
+/* ── PRINT ── */
+function PrintTab({cfg,sC,claims,pubs,game,org}){
+  const[show,setShow]=useState(false);
+  const gBdg=game.badges||[];
+  return(
+    <div>
+      <div style={{fontSize:9,color:"#ffcb05",marginBottom:12}}>🖨️ Print & Share</div>
+      {org&&(
+        <div className="card" style={{marginBottom:12,borderColor:"#e6a817"}}>
+          <div style={{fontSize:6,color:"#e6a817",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>🔧 SETTINGS</div>
+          <div className="g2" style={{marginBottom:6}}>
+            <div><label>STAG NAME</label><input value={cfg.stag} onChange={e=>sC({...cfg,stag:e.target.value})}/></div>
+            <div><label>FIANCÉE</label><input value={cfg.fiance} onChange={e=>sC({...cfg,fiance:e.target.value})}/></div>
+          </div>
+          <label>DATES</label><input value={cfg.dates} onChange={e=>sC({...cfg,dates:e.target.value})}/>
+        </div>
+      )}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10,gap:8,flexWrap:"wrap"}}>
+        <div style={{fontSize:6,color:"#ffcb05",fontFamily:"'Press Start 2P',monospace"}}>🎴 POKÉMON CARDS ({(claims||[]).length})</div>
+        <button className="btn bk" onClick={()=>setShow(s=>!s)}>{show?"Hide":"Show"} cards</button>
+      </div>
+      {show&&<>
+        <div className="vt" style={{fontSize:14,color:"#444",marginBottom:10}}>Screenshot and send to each friend — they wear that colour on Saturday.</div>
+        <div className="g2" style={{marginBottom:12}}>
+          {(claims||[]).length===0&&<div className="vt" style={{fontSize:14,color:"#333",gridColumn:"1/-1"}}>No Pokémon claimed yet.</div>}
+          {(claims||[]).map((c,i)=>(
+            <div key={i} className="card" style={{borderLeft:`4px solid ${c.color}`,borderRadius:"0 10px 10px 0"}}>
+              <div style={{display:"flex",gap:8,marginBottom:4}}>
+                <span style={{fontSize:26}}>{c.emoji}</span>
+                <div><div style={{fontFamily:"'Press Start 2P',monospace",fontSize:6,color:c.color}}>{c.pokemon}</div><div className="vt" style={{fontSize:16,color:"#fff"}}>{c.name}</div></div>
+              </div>
+              <div className="vt" style={{fontSize:13,color:"#888"}}>Wear something {c.cn.toLowerCase()} on Saturday</div>
+            </div>
+          ))}
+        </div>
+      </>}
+      <div style={{fontSize:6,color:"#ffcb05",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>🏅 BADGES (need 4 of 8)</div>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+        {BDGS.map((bd,i)=>{const ok=gBdg.length>i;return(
+          <div key={i} className="card" style={{textAlign:"center",borderColor:ok?bd.color:"#252535",opacity:ok?1:.4}}>
+            <div style={{fontSize:20,filter:ok?"none":"grayscale(1)"}}>{bd.emoji}</div>
+            <div style={{fontSize:4.5,color:bd.color,margin:"4px 0",fontFamily:"'Press Start 2P',monospace"}}>{bd.name}</div>
+          </div>
+        );})}
+      </div>
+      <div style={{fontSize:6,color:"#ffcb05",marginBottom:8,fontFamily:"'Press Start 2P',monospace"}}>🗺️ SATURDAY ROUTE</div>
+      <div style={{display:"grid",gap:5}}>
+        {(pubs||[]).map((p,i)=><div key={p.id} className="vt" style={{fontSize:14,padding:"6px 10px",background:"#12121f",borderRadius:6,border:"1px solid #252535"}}>{i+1}. {p.name} <span style={{color:"#444"}}>· {p.address}</span></div>)}
+        <div className="vt" style={{fontSize:14,padding:"6px 10px",background:"#120020",borderRadius:6,border:"1px solid #9C27B0",color:"#CE93D8"}}>⭐ The Cavern Club — Elite Four Finale</div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById("root"));
+</script>
+</body>
+</html>
